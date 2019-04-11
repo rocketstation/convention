@@ -29,6 +29,7 @@ new webpack.ProvidePlugin(
 ## API
 
 `convention` - process provided project with provided convention
+
 `convention.web`- process provided project with our web convention
 
 ## Motivation
