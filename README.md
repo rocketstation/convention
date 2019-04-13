@@ -1,4 +1,4 @@
-# Meta Name
+# Convention
 
 Convention parses project structure according to our convention
 
