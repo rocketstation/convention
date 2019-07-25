@@ -72,14 +72,11 @@ Object.defineProperty(exports, '__esModule', { value: true })
 exports.web = (web) =>
   parser(
     [
-      'actions',
       'assets',
       ['component', { case: 'p', hasModifier: false, isDefault: true }],
       ['configs', { case: 'su', hasModifier: false }],
       'hooks',
       'locales',
-      'queries',
-      'sagas',
       ['segments', { case: 'p' }],
       ['services', { hasModifier: false }],
       'skins',
