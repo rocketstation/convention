@@ -10,10 +10,12 @@ npm i @rocketstation/convention
 
 ## API
 
-`parser` -  creates parse function which will use provided convention
+`app` -  creates parse function which will parse app using provided convention
 `project` - parses provided folder using our conventions
 `web` - parses provided folder using our web convention
+`webApp` -  parses provided folder using our web convention
 `api` - parses provided folder using our api convention
+`apiApp` -  parses provided folder using our api convention
 `WEB` - returns our web convention object
 `API` - return our api convention object
 

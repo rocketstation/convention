@@ -53,13 +53,14 @@ const parseKey = (match, config) => {
 const parseVal = (match, config) => {
   return config.isDefault ? [match[0], 'default'] : match[0]
 }
-const parser = (convention) => {
-  const pattern = new RegExp(
-    `((lib|src).*)/(${Object.keys(convention).join('|')})(?:/index)?.js$`,
-  )
 
-  const walk = walker((r, v) => {
-    const match = v.match(pattern)
+const app = (convention) => {
+  return walker((r, v) => {
+    const match = v.match(
+      new RegExp(
+        `((lib|src).*)/(${Object.keys(convention).join('|')})(?:/index)?.js$`,
+      ),
+    )
 
     if (match) {
       const config = convention[match[3]]
@@ -67,34 +68,57 @@ const parser = (convention) => {
       r[parseKey(match, config)] = parseVal(match, config)
     }
   })
+}
 
-  return (dir) => {
-    if (fs.existsSync(dir) && fs.lstatSync(dir).isDirectory()) {
-      const structure = {}
+const apiApp = app(API)
 
-      const lib = path.resolve(dir, 'lib')
-      const src = path.resolve(dir, 'src')
+const webApp = app(WEB)
 
-      structure.lib = walk(lib)
+const api = (dir) => {
+  if (fs.existsSync(dir) && fs.lstatSync(dir).isDirectory()) {
+    const structure = {}
 
-      structure.src = fs.readdirSync(src).reduce((r, v) => {
-        const next = path.resolve(src, v)
+    const lib = path.resolve(dir, 'lib')
+    const src = path.resolve(dir, 'src')
 
-        if (fs.lstatSync(next).isDirectory()) {
-          r.push({ modules: walk(next), name: v })
-        }
+    structure.lib = apiApp(lib)
 
-        return r
-      }, [])
+    structure.src = fs.readdirSync(src).reduce((r, v) => {
+      const next = path.resolve(src, v)
 
-      return structure
-    }
+      if (fs.lstatSync(next).isDirectory()) {
+        r.push({ modules: apiApp(next), name: v })
+      }
+
+      return r
+    }, [])
+
+    return structure
   }
 }
 
-const api = parser(API)
+const web = (dir) => {
+  if (fs.existsSync(dir) && fs.lstatSync(dir).isDirectory()) {
+    const structure = {}
 
-const web = parser(WEB)
+    const lib = path.resolve(dir, 'lib')
+    const src = path.resolve(dir, 'src')
+
+    structure.lib = webApp(lib)
+
+    structure.src = fs.readdirSync(src).reduce((r, v) => {
+      const next = path.resolve(src, v)
+
+      if (fs.lstatSync(next).isDirectory()) {
+        r.push({ modules: webApp(next), name: v })
+      }
+
+      return r
+    }, [])
+
+    return structure
+  }
+}
 
 const project = (dir) => {
   return {
@@ -103,4 +127,4 @@ const project = (dir) => {
   }
 }
 
-module.exports = { api, API, parser, project, web, WEB }
+module.exports = { api, API, apiApp, app, project, web, WEB, webApp }
