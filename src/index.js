@@ -1,87 +1,106 @@
-const mn = require('@rocketstation/meta-name')
+const cc = require('@rocketstation/change-case')
 const fs = require('fs')
 const path = require('path')
 
-const LIB = 'lib'
-const SRC = 'src'
+const API = {
+  assets: { case: 'c', suffix: 'assets' },
+  configs: { case: 'su' },
+  endpoints: { case: 'c', suffix: 'API' },
+  locales: { case: 'c', suffix: 'say' },
+  model: { case: 'p', isDefault: true },
+  services: { case: 'c' },
+}
 
-const parse = mn({ filters: ['index'] })
+const WEB = {
+  assets: { case: 'c', suffix: 'assets' },
+  component: { case: 'p', isDefault: true },
+  configs: { case: 'su' },
+  hooks: { case: 'c', suffix: 'use' },
+  locales: { case: 'c', suffix: 'say' },
+  segments: { case: 'p', suffix: 'segments' },
+  services: { case: 'c' },
+  skins: { case: 'c', suffix: 'skins' },
+}
 
-const walker = (fn) => {
-  const walk = (dir, prefix) =>
-    fs.existsSync(dir)
-      ? fs
-          .readdirSync(dir)
-          .reduce((r, v) => {
-            const next = path.join(dir, v)
+const walker = (parse) => {
+  const walk = (dir) => {
+    return fs.readdirSync(dir).reduce((r, v) => {
+      const next = path.join(dir, v)
 
-            if (fs.lstatSync(next).isDirectory()) {
-              return r.concat(walk(next, prefix))
-            }
+      if (fs.lstatSync(next).isDirectory()) return Object.assign(r, walk(next))
 
-            if (next.endsWith('.js')) r.push(fn(next, prefix))
+      parse(r, next)
 
-            return r
-          }, [])
-          .filter(Boolean)
-      : []
+      return r
+    }, {})
+  }
 
   return walk
 }
 
-const parser = (convention = [], dir = __dirname) => {
-  const modifiers = convention.map((v) => [].concat(v))
+const parseKey = (match, config) => {
+  let key = match[1].split('/')
+  if (config.suffix) key.push(config.suffix)
 
-  const lib = path.join(dir, LIB)
-  const src = path.join(dir, SRC)
+  if (match[2] === 'src') {
+    key = key.slice(2)
+    if (key.length <= 0) key.push(match[3])
+  }
 
-  const walk = walker((v, prefix) => {
-    const next = path.relative(dir, v)
-
-    const [modifier, config = {}] =
-      modifiers.find((k) => next.includes(k[0])) || []
-
-    if (!modifier) return
-
-    return [
-      parse(
-        (config.hasModifier === false
-          ? next.replace(new RegExp(path.sep + modifier, 'ig'), '')
-          : next
-        ).replace(prefix, ''),
-        config.case
-      ),
-      config.isDefault ? [next, 'default'] : next,
-    ]
-  })
-
-  return () => ({
-    lib: walk(lib),
-    src: fs.readdirSync(src).reduce((r, v) => {
-      const app = path.join(src, v)
-
-      if (fs.lstatSync(app).isDirectory()) r[v] = walk(app, path.join(SRC, v))
-
-      return r
-    }, {}),
-  })
+  return cc[config.case](key)
 }
 
-Object.defineProperty(exports, '__esModule', { value: true })
-
-exports.web = (web) =>
-  parser(
-    [
-      'assets',
-      ['component', { case: 'p', hasModifier: false, isDefault: true }],
-      ['configs', { case: 'su', hasModifier: false }],
-      'hooks',
-      'locales',
-      ['segments', { case: 'p' }],
-      ['services', { hasModifier: false }],
-      'skins',
-    ],
-    web
+const parseVal = (match, config) => {
+  return config.isDefault ? [match[0], 'default'] : match[0]
+}
+const parser = (convention) => {
+  const pattern = new RegExp(
+    `((lib|src).*)/(${Object.keys(convention).join('|')})(?:/index)?.js$`,
   )
 
-exports.default = parser
+  const walk = walker((r, v) => {
+    const match = v.match(pattern)
+
+    if (match) {
+      const config = convention[match[3]]
+
+      r[parseKey(match, config)] = parseVal(match, config)
+    }
+  })
+
+  return (dir) => {
+    if (fs.existsSync(dir) && fs.lstatSync(dir).isDirectory()) {
+      const structure = {}
+
+      const lib = path.resolve(dir, 'lib')
+      const src = path.resolve(dir, 'src')
+
+      structure.lib = walk(lib)
+
+      structure.src = fs.readdirSync(src).reduce((r, v) => {
+        const next = path.resolve(src, v)
+
+        if (fs.lstatSync(next).isDirectory()) {
+          r.push({ modules: walk(next), name: v })
+        }
+
+        return r
+      }, [])
+
+      return structure
+    }
+  }
+}
+
+const api = parser(API)
+
+const web = parser(WEB)
+
+const project = (dir) => {
+  return {
+    api: api(path.resolve(dir, 'api')),
+    web: web(path.resolve(dir, 'web')),
+  }
+}
+
+module.exports = { api, API, parser, project, web, WEB }

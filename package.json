@@ -8,22 +8,22 @@
     "Oleksii Pysanko <oleksiipysanko@rstation.io> (https://rstation.io)"
   ],
   "dependencies": {
-    "@rocketstation/meta-name": "3"
+    "@rocketstation/change-case": "2"
   },
-  "description": "parses project structure according to our convention",
+  "description": "parses project structure according to the provided convention",
   "devDependencies": {
     "@babel/cli": "7",
     "@babel/core": "7",
     "@babel/preset-env": "7",
     "babel-eslint": "10",
     "babel-preset-minify": "0.5",
-    "cross-env": "5",
+    "cross-env": "6",
     "eslint": "6",
     "eslint-config-prettier": "6",
-    "eslint-config-standard": "13",
+    "eslint-config-standard": "14",
     "eslint-plugin-import": "2",
     "eslint-plugin-jest": "22",
-    "eslint-plugin-node": "9",
+    "eslint-plugin-node": "10",
     "eslint-plugin-prettier": "3",
     "eslint-plugin-promise": "4",
     "eslint-plugin-standard": "4",
@@ -44,5 +44,5 @@
     "build": "rm -rf build && cross-env NODE_ENV=production babel src -d build --ignore src/**/*.test.js",
     "test": "jest src"
   },
-  "version": "2.0.1"
+  "version": "3.0.0"
 }

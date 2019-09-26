@@ -1,6 +1,6 @@
 # Convention
 
-Convention parses project structure according to our convention
+Convention parses project structure according to the provided convention
 
 ## Installation
 
@@ -8,29 +8,14 @@ Convention parses project structure according to our convention
 npm i @rocketstation/convention
 ```
 
-## Usage
-
-```javascript
-import path from 'path'
-import { web } from '@rocketstation/convention'
-import webpack from 'webpack'
-
-const convention = web(__dirname)
-const structure = convention()
-
-new webpack.ProvidePlugin(
-  structure.lib.reduce(([k, v]) => {
-    r[k] = v
-    return r
-  }, {})
-)
-```
-
 ## API
 
-`convention` - process provided project with provided convention
-
-`convention.web`- process provided project with our web convention
+`parser` -  creates parse function which will use provided convention
+`project` - parses provided folder using our conventions
+`web` - parses provided folder using our web convention
+`api` - parses provided folder using our api convention
+`WEB` - returns our web convention object
+`API` - return our api convention object
 
 ## Motivation
 
